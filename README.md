@@ -11,7 +11,7 @@
 [download-image]: https://img.shields.io/npm/dm/reliable-macaca-slave.svg?style=flat-square
 [download-url]: https://npmjs.org/package/reliable-macaca-slave
 
-reliable-macaca-slave is the slave part of the [Reliable](https://github.com/reliablejs). Here for adapt to [macaca-cli](https://github.com/macacajs/macaca-cli), which in order to provide continuous integration service.
+reliable-macaca-slave is the slave part of the [Reliable](https://github.com/reliablejs). Here for adapt to [macaca-cli](//github.com/macacajs/macaca-cli), which in order to provide continuous integration service.
 
 ## Installment
 
@@ -29,7 +29,7 @@ $ reliable server -m <reliable-master:port> --verbose
 
 ## Docs
 
-[reliable-macaca-slave Deployment Guide](//macacajs.github.io/macaca/slave-deployment.html)
+[reliable-macaca-slave Deployment Guide](//macacajs.github.io/slave-deployment.html)
 
 ## Docker
 
