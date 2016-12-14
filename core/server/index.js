@@ -1,16 +1,16 @@
 'use strict';
 
-var co = require('co');
-var os = require('os');
-var koa = require('koa');
-var EOL = require('os').EOL;
-var detect = require('detect-port');
+const co = require('co');
+const os = require('os');
+const koa = require('koa');
+const EOL = require('os').EOL;
+const detect = require('detect-port');
 
-var cron = require('./cron');
-var router = require('./router');
-var _ = require('../../common/helper');
-var logger = require('../../common/logger');
-var middlewares = require('../../web/middlewares');
+const cron = require('./cron');
+const router = require('./router');
+const _ = require('../../common/helper');
+const logger = require('../../common/logger');
+const middlewares = require('../../web/middlewares');
 
 /**
  * The Koa Web Server

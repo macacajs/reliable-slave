@@ -1,21 +1,21 @@
 'use strict';
 
-var os = require('os');
-var co = require('co');
-var zmq = require('zmq');
-var EOL = require('os').EOL;
-var stream = require('stream');
-var detect = require('detect-port');
+const os = require('os');
+const co = require('co');
+const zmq = require('zmq');
+const EOL = require('os').EOL;
+const stream = require('stream');
+const detect = require('detect-port');
 
-var Channel = require('./channel');
-var taskProcessor = require('../task');
-var _ = require('../../common/helper');
-var logger = require('../../common/logger');
-var request = require('../../common/request');
-var getServerInfo = require('../server/monitor');
+const Channel = require('./channel');
+const taskProcessor = require('../task');
+const _ = require('../../common/helper');
+const logger = require('../../common/logger');
+const request = require('../../common/request');
+const getServerInfo = require('../server/monitor');
 
 // There are three statuses in communication
-var status = {
+const status = {
   ACK: 'ack',
   AVAILABLE: 'available',
   BUSY: 'busy'
@@ -25,7 +25,7 @@ var status = {
  * Register to the master machine with ip and port
  */
 function *register(options) {
-  var result = yield request({
+  let result = yield request({
     uri: options.master,
     form: {
       sysInfo: getServerInfo(),
@@ -52,7 +52,7 @@ function *register(options) {
 function reregister(options, callback) {
   co(function *() {
     logger.debug('Zmq Reconnecting...');
-    var success = yield register(options);
+    const success = yield register(options);
 
     if (success) {
       callback();
@@ -78,7 +78,7 @@ function connect(channel) {
   logger.debug('Connected to the master server.');
 
   setTimeout(function() {
-    var data = {
+    const data = {
       sysInfo: getServerInfo(),
       type: 'ack',
       data: 'hello master',
@@ -93,7 +93,7 @@ function connect(channel) {
  * @param options
  */
 function init(options) {
-  var channel = Channel.getInstance(options);
+  const channel = Channel.getInstance(options);
 
   connect(channel);
 

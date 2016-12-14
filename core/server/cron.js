@@ -1,13 +1,13 @@
 'use strict';
 
-var fs = require('fs');
-var path = require('path');
+const fs = require('fs');
+const path = require('path');
 
-var _ = require('../../common/helper');
-var logger = require('../../common/logger');
+const _ = require('../../common/helper');
+const logger = require('../../common/logger');
 
-var oneDay = 3600 * 1000 * 24;
-var tempDir = path.join(__dirname, '..', '..', '.temp');
+const oneDay = 3600 * 1000 * 24;
+const tempDir = path.join(__dirname, '..', '..', '.temp');
 
 function cleanTempDir() {
 

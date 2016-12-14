@@ -1,6 +1,6 @@
 'use strict';
 
-var killing = require('killing');
+const killing = require('killing');
 
 /**
  * Listening to the system signal and do task

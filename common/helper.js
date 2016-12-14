@@ -1,6 +1,6 @@
 'use strict';
 
-var _ = require('xutil');
+const _ = require('xutil');
 
 _.timeoutPromise = function(seconds, defaultValue) {
   return new Promise((reslove, reject) => {
