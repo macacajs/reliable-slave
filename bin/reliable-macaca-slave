@@ -2,19 +2,18 @@
 
 'use strict';
 
-var co = require('co');
-var fs = require('fs');
-var path = require('path');
-var EOL = require('os').EOL;
-var chalk = require('chalk');
-var update = require('npm-update');
-var program = require('commander');
-var driver = require('macaca-cli');
-var spawn = require('child_process').spawn;
+const co = require('co');
+const fs = require('fs');
+const path = require('path');
+const EOL = require('os').EOL;
+const chalk = require('chalk');
+const update = require('npm-update');
+const program = require('commander');
+const spawn = require('child_process').spawn;
 
-var pkg = require('../package');
-var signal = require('../init/signal');
-var request = require('../common/request');
+const pkg = require('../package');
+const signal = require('../init/signal');
+const request = require('../common/request');
 
 program
   .option('-s, --signal <s>',   'send signal to process: stop, restart')
@@ -50,31 +49,30 @@ if (program.versions) {
 }
 
 if (program.signal) {
-  driver.server.signal(program.signal);
   signal(program.signal);
   return;
 }
 
-var cmd = program.args[0];
+const cmd = program.args[0];
 
 if (!cmd) {
   return program.help();
 }
 
-var file = path.join(__dirname, `${pkg.name}-${cmd}`);
+const file = path.join(__dirname, `${pkg.name}-${cmd}`);
 
 if (!fs.existsSync(file)) {
   console.log(`${EOL} command ${chalk.yellow(cmd)} not found`);
   return program.help();
 }
 
-var printInfo = function(lines) {
-  var maxLength = 0;
+const printInfo = function(lines) {
+  let maxLength = 0;
   lines.forEach(line => {
     maxLength = line.length > maxLength ? line.length : maxLength;
   });
 
-  var res = [new Array(maxLength + 7).join('*')];
+  const res = [new Array(maxLength + 7).join('*')];
 
   lines.forEach(line => {
     res.push(`*  ${line + new Array(maxLength - line.length + 1).join(' ')}  *`);
@@ -90,10 +88,10 @@ function init(error, data) {
     printInfo([`version ${pkg.version} is outdate`, `run: npm i -g ${pkg.name}@${data.version}`]);
   }
 
-  var args = program.rawArgs.slice(3);
+  const args = program.rawArgs.slice(3);
   args.unshift(file);
 
-  var bootstrap = spawn('node', args, {
+  const bootstrap = spawn('node', args, {
     stdio: 'inherit'
   });
 

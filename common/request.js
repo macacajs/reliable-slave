@@ -1,8 +1,8 @@
 'use strict';
 
-var request = require('co-request');
+const request = require('co-request');
 
-var logger = require('./logger');
+const logger = require('./logger');
 
 module.exports = function *(options) {
   try {

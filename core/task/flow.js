@@ -1,38 +1,39 @@
 'use strict';
 
-var co = require('co');
-var fs = require('fs');
-var path = require('path');
-var EOL = require('os').EOL;
-var NPM = require('reliable-npm').NPM;
-var reliableGit = require('reliable-git');
-var spawn = require('child_process').spawn;
-var createRunner = require('macaca-cli').Runner;
+const co = require('co');
+const fs = require('fs');
+const path = require('path');
+const EOL = require('os').EOL;
+const NPM = require('reliable-npm').NPM;
+const reliableGit = require('reliable-git');
+const spawn = require('child_process').spawn;
+const Builder = require('reliable-build');
 
-var analysis = require('./analysis');
-var _ = require('../../common/helper');
-var Channel = require('../slave/channel');
-var logger = require('../../common/logger');
-var getServerInfo = require('../server/monitor');
+const _ = require('../../common/helper');
+const Channel = require('../slave/channel');
+const logger = require('../../common/logger');
+const getServerInfo = require('../server/monitor');
 
 // Set the npm repo
-var npm = new NPM();
+const npm = new NPM();
 
-var status = {
+const status = {
   ACK: 'ack',
   AVAILABLE: 'available',
   BUSY: 'busy'
 };
 
-var bodyStatus = {
+const bodyStatus = {
   SUCCESS: 2,
   FAILED: 3
 };
 
-var type = {
+const type = {
   ACK: 'ack',
   TASK: 'task'
 };
+
+const setSlaveAvailable = () => { global.__task_status = status.AVAILABLE; };
 
 /**
  * Process the task and send the result back when finished
@@ -40,35 +41,52 @@ var type = {
  */
 module.exports = function *(msg, options) {
 
-  var channel = Channel.getInstance();
-  var basicData = {
+  const channel = Channel.getInstance();
+  const basicData = {
     type: type.TASK,
     taskId: msg.taskId
   };
 
-  var finalResult = '';
-  var hasError = false;
-  var gitResult = '';
+  let gitResult = '';
+
+  function taskEnd(code = 0) {
+    // Change the status to available after the task.
+    setSlaveAvailable();
+
+    const runnerStatus = code === 0 ? bodyStatus.SUCCESS : bodyStatus.FAILED;
+
+    const result = _.merge(basicData, {
+      sysInfo: getServerInfo(),
+      status: status.AVAILABLE,
+      bodyStatus: runnerStatus,
+      extra: {},
+      body: 'false'
+    });
+
+    logger.debug('Task is end with %s data...', msg.taskId);
+
+    channel.send(result);
+  }
 
   try {
-
     // Create the temp directory according to taskId
-    var tempDir = path.join(__dirname, '..', '..', '.temp', msg.taskId);
+    const tempDir = path.join(__dirname, '..', '..', '.temp', msg.taskId);
+    options.path = tempDir;
+    options.taskId = msg.taskId;
 
     if (fs.existsSync(tempDir)) {
       _.rimraf(tempDir);
     }
     _.mkdir(tempDir);
 
-    var logResult = [];
     logger.debug('Task %s start git clone...', msg.taskId);
     // Git clone the repo
-    var _body = msg.body.trim();
+    const _body = msg.body.trim().split('#');
 
-    var gitRepo = yield Promise.race([
+    const gitRepo = yield Promise.race([
       reliableGit.clone({
-        repo: _body.split('#')[0],
-        branch: _body.split('#')[1],
+        repo: _body[0],
+        branch: _body[1],
         dir: tempDir
       }),
       _.timeoutPromise(600, 'Git clone timeout for 10mins')
@@ -78,56 +96,20 @@ module.exports = function *(msg, options) {
 
     logger.debug('Task %s start git clone success!', msg.taskId);
 
-    // Npm install the modules
-    logger.debug('Task %s start npm install...', msg.taskId);
-    yield Promise.race([
-      npm.install({
-        registry: options.registry,
-        cwd: tempDir,
-        timeout: 10 * 60 * 1000 // kill after timeout
-      }),
-      _.timeoutPromise(600, 'Npm install timeout for 10mins')
-    ]);
-    logger.debug('Task %s npm install success!', msg.taskId);
+    // get build.sh path
+    const builder = new Builder(options);
+    const filePath = yield builder.build();
+    const command = spawn('sh', [filePath]);
 
-    data = _.merge(basicData, {
-      sysInfo: getServerInfo(),
-      status: status.BUSY,
-      body: logResult.join(EOL)
-    });
+    command.stdout.setEncoding('utf8');
+    command.stderr.setEncoding('utf8');
 
-    channel.send(data);
-
-    logger.debug('Sending %s data...', msg.taskId);
-
-    var env = {};
-    var envFromServer = _body.split('#')[2];
-
-    if (envFromServer) {
-      envFromServer = envFromServer.split(',');
-      envFromServer.forEach(function(item) {
-        var key = item.split('=')[0];
-        var value = item.split('=')[1];
-        env[key] = value;
-      });
-    }
-
-    // Run thels test and return a stream.
-    var runner = createRunner({
-      cwd: tempDir,
-      directory: 'macaca-test',
-      env: env,
-      colors: true,
-      framework: 'mocha'
-    });
-
-    // Send the result back immediately when receiving data.
-    runner.on('data', function(data) {
+    command.stdout.on('data', data => {
       logger.debug('Sending %s data ...', msg.taskId);
-      data += EOL;
-      finalResult += data;
 
-      var result = _.merge(basicData, {
+      data += EOL;
+
+      const result = _.merge(basicData, {
         sysInfo: getServerInfo(),
         status: status.BUSY,
         body: data
@@ -136,60 +118,48 @@ module.exports = function *(msg, options) {
       channel.send(result);
     });
 
-    runner.on('error', function(data) {
+    command.stderr.on('data', data => {
+      logger.debug('Sending %s data ...', msg.taskId);
+
       data += EOL;
+
+      const result = _.merge(basicData, {
+        sysInfo: getServerInfo(),
+        status: status.BUSY,
+        body: data
+      });
+
+      channel.send(result);
+    });
+
+    command.on('close', code => {
+      taskEnd(code);
+    });
+
+    command.on('error', err => {
+      err += EOL;
 
       logger.debug('Sending %s error data...', msg.taskId);
-      finalResult += data;
-      hasError = true;
 
-      var result = _.merge(basicData, {
+      const result = _.merge(basicData, {
         sysInfo: getServerInfo(),
         status: status.BUSY,
         body: data
       });
 
       channel.send(result);
+
+      taskEnd(1);
     });
-
-    // Send the final result back with the analysis.
-    runner.on('close', function() {
-      // Change the status to available after the task.
-
-      global.__task_status = status.AVAILABLE;
-
-      var execInfo = analysis(finalResult);
-      var runnerStatus = hasError ? bodyStatus.FAILED : execInfo.status;
-
-      var result = _.merge(basicData, {
-        sysInfo: getServerInfo(),
-        status: status.AVAILABLE,
-        bodyStatus: runnerStatus,
-        extra: _.merge(execInfo, {
-          description: gitResult
-        }),
-        body: 'false'
-      });
-
-      logger.debug('Done task %s data...', msg.taskId);
-
-      channel.send(result);
-    });
-
   } catch (e) {
-    hasError = true;
+    setSlaveAvailable();
 
-    // Change the status to available when error happens.
-    global.__task_status = status.AVAILABLE;
-
-    logger.warn(e.toString());
-    logger.debug(e.toString());
-    logger.debug('Error during install...');
+    logger.warn(e.stack);
 
     // Send the error data back to the server
-    var execResult = e.toString().trim();
+    const execResult = e.toString().trim();
 
-    var data = _.merge(basicData, {
+    const data = _.merge(basicData, {
       sysInfo: getServerInfo(),
       status: status.BUSY,
       body: execResult
@@ -199,20 +169,11 @@ module.exports = function *(msg, options) {
 
     channel.send(data);
 
-    // Send the close info to server
-    data = _.merge(basicData, {
-      sysInfo: getServerInfo(),
-      status: status.AVAILABLE,
-      bodyStatus: 3,
-      extra: {
-        description: gitResult
-      },
-      body: 'false'
-    });
+    taskEnd(1);
 
     logger.debug('Done task %s data...', msg.taskId);
 
-    setTimeout(function() {
+    setTimeout(() => {
       channel.send(data);
     }, 3000);
   }

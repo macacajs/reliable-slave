@@ -1,9 +1,9 @@
 'use strict';
 
-var path = require('path');
-var logger = require('reliable-logger');
+const path = require('path');
+const logger = require('reliable-logger');
 
-var options = {
+const options = {
   logFileDir: path.join(__dirname, '..', 'logs')
 };
 

@@ -1,12 +1,12 @@
 'use strict';
 
-var cluster = require('cluster');
+const cluster = require('cluster');
 
-var remote = require('../core/slave');
-var server = require('../core/server');
+const remote = require('../core/slave');
+const server = require('../core/server');
 
 if (cluster.isWorker) {
-  cluster.worker.on('message', function(e) {
+  cluster.worker.on('message', e => {
     switch (e.message) {
       case 'startServer':
         startServer(e.data);
