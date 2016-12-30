@@ -1,3 +1,7 @@
+# 2.0.1  / 2016-12-29
+  * refactor: remove optionalDependencies
+  * fix: add error and warning catch
+
 # 2.0.0  / 2016-12-14
   * new build mode
 
