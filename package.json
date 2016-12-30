@@ -1,6 +1,6 @@
 {
   "name": "reliable-macaca-slave",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "slave part of the Reliable adapt to macaca.",
   "keywords": [
     "ui test",
@@ -41,12 +41,6 @@
     "reliable-npm": "^0.2.1",
     "xutil": "~1.0.0",
     "zmq": "2.15.3"
-  },
-  "optionalDependencies": {
-    "macaca-android": "^1.0.25",
-    "macaca-chrome": "^1.0.1",
-    "macaca-electron": "^1.1.2",
-    "macaca-ios": "^1.0.36"
   },
   "devDependencies": {
     "co-mocha": "~1.1.2",

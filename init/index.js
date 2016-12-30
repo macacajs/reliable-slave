@@ -74,21 +74,21 @@ module.exports = function() {
 };
 
 process.on('error', err => {
-  logger.error('------------ error ------------\n', err.stack);
+  logger.error('------------ error ------------\n%s', err.stack);
 });
 
 process.on('uncaughtException', err => {
-  logger.error('------------ uncaughtException ------------\n', err.stack);
+  logger.error('------------ uncaughtException ------------\n%s', err.stack);
 });
 
 process.on('rejectionHandled', err => {
-  logger.error('------------ rejectionHandled ------------\n', err.stack);
+  logger.error('------------ rejectionHandled ------------\n%s', err.stack);
 });
 
 process.on('unhandledRejection', err => {
-  logger.error('------------ unhandledRejection ------------\n', err.stack);
+  logger.error('------------ unhandledRejection ------------\n%s', err.stack);
 });
 
 process.on('warning', warning => {
-  console.warn('------------ warning ------------\n', warning.stack);
+  logger.warn('------------ warning ------------\n', warning.stack);
 });
