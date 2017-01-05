@@ -53,19 +53,36 @@ module.exports = function *(msg, options) {
     // Change the status to available after the task.
     setSlaveAvailable();
 
-    const runnerStatus = code === 0 ? bodyStatus.SUCCESS : bodyStatus.FAILED;
+    const runnerStatus = code === 0 ?
+      bodyStatus.SUCCESS :
+      bodyStatus.FAILED;
+
+    const extra = code === 0 ?
+      {} :
+      { description: gitResult };
 
     const result = _.merge(basicData, {
       sysInfo: getServerInfo(),
       status: status.AVAILABLE,
       bodyStatus: runnerStatus,
-      extra: {},
+      extra,
       body: 'false'
     });
 
     logger.debug('Task is end with %s data...', msg.taskId);
 
     channel.send(result);
+  }
+
+  function envFromServer(env = '') {
+    const result = {};
+
+    env && env.split(',').forEach(e => {
+      const [key, value] = e.split('=');
+      result[key] = value;
+    });
+
+    return result;
   }
 
   try {
@@ -81,12 +98,14 @@ module.exports = function *(msg, options) {
 
     logger.debug('Task %s start git clone...', msg.taskId);
     // Git clone the repo
-    const _body = msg.body.trim().split('#');
+    const [repo, branch, env] = msg.body.trim().split('#');
+    const environment = envFromServer(env);
+    options.env = environment;
 
     const gitRepo = yield Promise.race([
       reliableGit.clone({
-        repo: _body[0],
-        branch: _body[1],
+        repo,
+        branch,
         dir: tempDir
       }),
       _.timeoutPromise(600, 'Git clone timeout for 10mins')

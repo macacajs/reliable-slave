@@ -1,6 +1,6 @@
 {
   "name": "reliable-macaca-slave",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "slave part of the Reliable adapt to macaca.",
   "keywords": [
     "ui test",
@@ -58,7 +58,7 @@
     "lint"
   ],
   "engines": {
-    "node": ">=4.2.1"
+    "node": ">=5"
   },
   "homepage": "https://github.com/reliablejs/reliable-macaca-slave",
   "license": "MIT"
