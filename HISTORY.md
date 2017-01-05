@@ -1,3 +1,6 @@
+# 2.1.0  / 2017-01-05
+  * feat: support task environment variables
+
 # 2.0.1  / 2016-12-29
   * refactor: remove optionalDependencies
   * fix: add error and warning catch
