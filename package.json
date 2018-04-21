@@ -44,15 +44,17 @@
   },
   "devDependencies": {
     "co-mocha": "~1.1.2",
-    "eslint": "^3.5.0",
     "command-line-test": "^1.0.5",
+    "eslint": "^3.5.0",
     "eslint-plugin-react": "~3.2.3",
+    "git-contributor": "^1.0.8",
     "istanbul": "~0.3.17",
     "should": "~7.0.4",
     "should-http": "0.0.4"
   },
   "scripts": {
-    "lint": "make lint"
+    "lint": "make lint",
+    "contributor": "git-contributor"
   },
   "precommit": [
     "lint"
